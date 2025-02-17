@@ -21,7 +21,7 @@ app.get("/api/extract-custom", async (req, res) => {
     const { url, prompt } = req.query;
     console.log(url, prompt);
     if(!url || !prompt) {
-        return res.status(400).json({error : "Please provide a 'url' and a 'prompt' query parameter" });
+        return res.status(400).json({error : "Please provide 'url' and 'prompt' query parameter" });
     }
 
     try {
