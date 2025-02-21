@@ -3,9 +3,21 @@ const Product = require("../models/product");
 const FirecrawlApp = require("@mendable/firecrawl-js").default;
 const { urls, prompt } = require("../config/websites");
 require('dotenv').config();
+const { z } = require("zod");
 
 const firecrawlApp = new FirecrawlApp({
   apiKey: process.env.FIRECRAWL_API_KEY,
+});
+
+const schema = z.object({
+  productName: z.string(),
+  currentPrice: z.number(),
+  originalPrice: z.number(),
+  discount: z.string(),
+  stockStatus: z.string(),
+  promotionalOffer: z.string(),
+  website: z.string(),
+  url: z.string(),
 });
 
 class ScraperService {
@@ -16,7 +28,14 @@ class ScraperService {
 
   async scrapeWebsite() {
     try {
-      const scrapeResult = await firecrawlApp.extract(urls, { prompt });
+      const scrapeResult = await firecrawlApp.extract(
+        urls,
+        {
+          prompt : prompt,
+          schema: schema
+        }
+      );
+
       if (!scrapeResult.success) {
         throw new Error(`Extraction failed: ${scrapeResult.error}`);
       }

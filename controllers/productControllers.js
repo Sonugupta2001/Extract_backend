@@ -4,9 +4,21 @@ const Product = require("../models/product");
 const FirecrawlApp = require("@mendable/firecrawl-js").default;
 const mongoose = require("mongoose");
 require('dotenv').config();
+const { z } = require("zod");
 
 const firecrawlApp = new FirecrawlApp({
   apiKey: process.env.FIRECRAWL_API_KEY,
+});
+
+const schema = z.array({
+  productName: z.string(),
+  currentPrice: z.number(),
+  originalPrice: z.number(),
+  discount: z.string(),
+  stockStatus: z.string(),
+  promotionalOffer: z.string(),
+  website: z.string(),
+  url: z.string(),
 });
 
 const checkDBConnection = (req, res, next) => {
@@ -31,11 +43,14 @@ router.post("/extract-custom", async (req, res) => {
       throw new Error(`Extraction failed: ${scrapeResult.error}`);
     }
     res.json(scrapeResult.data);
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error in custom extraction:", error);
     res.status(500).json({ error: error.message });
   }
 });
+
+
 
 router.post("/extract", async (req, res) => {
   const { urls } = req.body;
@@ -44,14 +59,18 @@ router.post("/extract", async (req, res) => {
   }
 
   try {
-    const scrapeResult = await firecrawlApp.extract(urls, {
-      prompt:
-        "Extract the products across the provided URLs and get the products with best prices, along with their details such as, product name, current price, original price, discount, promotional offers, stock status, website, and URL.",
-    });
+    const scrapeResult = await firecrawlApp.extract(
+      urls,
+      {
+        prompt: "Extract the products across the provided URLs and get the products with best prices, along with their details such as, product name, current price, original price, discount, promotional offers, stock status, website, and URL.",
+      },
+    );
 
     if (!scrapeResult.success) {
       throw new Error(`Extraction failed: ${scrapeResult.error}`);
     }
+
+    console.log("Scrape result:", scrapeResult.data.products);
 
     const productsToInsert = scrapeResult.data.products.map((product) => ({
       ...product,
